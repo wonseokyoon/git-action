@@ -7,15 +7,35 @@ on:
       - 'build.gradle'
       - 'Dockerfile'
       - 'index.html'
-    branches:
-      - main
-      - develop
+    branches: [ "main", "develop" ]
   pull_request:
-    branches:
-      - main
-      - develop
+    branches: [ "main", "develop" ]
+
 jobs:
+ # # 1. 테스트 :PR과 Push 시 항상 실행
+ #  backend-ci:
+ #    runs-on: ubuntu-latest
+ #    steps:
+ #      - name: Checkout code
+ #        uses: actions/checkout@v4
+
+ #      - name: Set up JDK 21
+ #        uses: actions/setup-java@v4
+ #        with:
+ #          java-version: '21'
+ #          distribution: 'temurin'
+
+ #      - name: Grant execute permission for gradlew
+ #        run: chmod +x ./gradlew
+
+ #      - name: Run tests with Gradle
+ #        run: ./gradlew test # 테스트 실행 (build는 포함하지 않음)
+        
+  # 2. 릴리스 : main/develop 브랜치로 Push될 때만 실행
   makeTagAndRelease:
+    name: Create Tag and Release
+    if: github.event_name == 'push'
+    # needs: backend-ci
     runs-on: ubuntu-latest
     outputs:
       tag_name: ${{ steps.create_tag.outputs.new_tag }}
@@ -37,8 +57,11 @@ jobs:
           body: ${{ steps.create_tag.outputs.changelog }}
           draft: false
           prerelease: false
+
+  # 3. 빌드 및 배포: main/develop 브랜치로 Push될 때만 실행
   buildImageAndPush:
     name: 도커 이미지 빌드와 푸시
+    if: github.event_name == 'push'
     needs: makeTagAndRelease
     runs-on: ubuntu-latest
     steps:
