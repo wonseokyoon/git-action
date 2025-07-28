@@ -41,6 +41,11 @@ jobs:
       tag_name: ${{ steps.create_tag.outputs.new_tag }}
     steps:
       - uses: actions/checkout@v4
+      - name: no.html 생성
+        env:
+          ACTIONS_STEP_DEBUG: true
+          NO_HTML: ${{ secrets.PRIVATE_HTML }}
+        run: echo "$NO_HTML" > src/private.html
       - name: Create Tag
         id: create_tag
         uses: mathieudutour/github-tag-action@v6.2
